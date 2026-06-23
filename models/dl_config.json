@@ -1,0 +1,1 @@
+{"input_size": 5, "num_classes": 3, "features": ["Annual_Rainfall_mm", "Avg_Temperature_C", "Avg_Humidity_percent", "Soil_Moisture_percent", "Rainfall_Deficit_percent"]}
