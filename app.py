@@ -10,6 +10,12 @@ import os
 import plotly.express as px
 import plotly.graph_objects as go
 
+# Auto-generate models if not present (for cloud deployment)
+if not os.path.exists('models/ml_model.pkl'):
+    os.system('python create_dataset.py')
+    os.system('python src/ml_model.py')
+    os.system('python src/dl_model.py')
+
 sys.path.append('src')
 from chatbot import get_response
 
