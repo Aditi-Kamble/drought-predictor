@@ -2,8 +2,12 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import pickle
-import torch
-import torch.nn as nn
+try:
+    import torch
+    import torch.nn as nn
+    TORCH_AVAILABLE = True
+except:
+    TORCH_AVAILABLE = False
 import json
 import sys
 import os
@@ -78,6 +82,8 @@ class DroughtNet(nn.Module):
 
 @st.cache_resource
 def load_dl_model():
+    if not TORCH_AVAILABLE:
+        return None, None, None
     with open('models/dl_config.json', 'r') as f:
         config = json.load(f)
     model = DroughtNet(config['input_size'], config['num_classes'])
@@ -240,14 +246,18 @@ elif page == "🔮 Drought Predictor":
         ml_label   = ml_le.inverse_transform([ml_pred])[0]
         ml_conf    = max(ml_proba) * 100
 
-        # DL Prediction
-        dl_input   = torch.FloatTensor(dl_scaler.transform(input_data))
-        with torch.no_grad():
-            dl_out  = dl_model(dl_input)
-            dl_prob = torch.softmax(dl_out, dim=1).numpy()[0]
-            dl_pred = np.argmax(dl_prob)
-        dl_label    = dl_le.inverse_transform([dl_pred])[0]
-        dl_conf     = max(dl_prob) * 100
+       # DL Prediction
+if TORCH_AVAILABLE:
+    dl_input = torch.FloatTensor(dl_scaler.transform(input_data))
+    with torch.no_grad():
+        dl_out  = dl_model(dl_input)
+        dl_prob = torch.softmax(dl_out, dim=1).numpy()[0]
+        dl_pred = np.argmax(dl_prob)
+    dl_label = dl_le.inverse_transform([dl_pred])[0]
+    dl_conf  = max(dl_prob) * 100
+else:
+    dl_label = ml_label
+    dl_conf  = ml_conf
 
         # Display Results
         col1, col2 = st.columns(2)
