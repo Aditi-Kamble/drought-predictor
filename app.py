@@ -41,14 +41,72 @@ st.markdown("""
     .main-header {
         background: linear-gradient(135deg, #2d5a27, #4a9e3f);
         padding: 20px; border-radius: 12px;
-        text-align: center; color: white; margin-bottom: 20px;
+        text-align: center; color: white !important;
+        margin-bottom: 20px;
     }
-    .drought-severe   { background:#ffe0e0; border-left:5px solid #d32f2f; padding:15px; border-radius:8px; }
-    .drought-moderate { background:#fff3e0; border-left:5px solid #f57c00; padding:15px; border-radius:8px; }
-    .drought-mild     { background:#fffde7; border-left:5px solid #fbc02d; padding:15px; border-radius:8px; }
-    .drought-normal   { background:#e8f5e9; border-left:5px solid #388e3c; padding:15px; border-radius:8px; }
-    .chat-user { background:#e3f2fd; padding:10px 15px; border-radius:18px 18px 4px 18px; margin:8px 0; }
-    .chat-bot  { background:#f1f8e9; padding:10px 15px; border-radius:18px 18px 18px 4px; margin:8px 0; }
+    .main-header h1, .main-header p {
+        color: white !important;
+    }
+    .drought-severe {
+        background:#ffe0e0;
+        border-left:5px solid #d32f2f;
+        padding:15px; border-radius:8px;
+        color: #1a1a1a !important;
+    }
+    .drought-moderate {
+        background:#fff3e0;
+        border-left:5px solid #f57c00;
+        padding:15px; border-radius:8px;
+        color: #1a1a1a !important;
+    }
+    .drought-mild {
+        background:#fffde7;
+        border-left:5px solid #fbc02d;
+        padding:15px; border-radius:8px;
+        color: #1a1a1a !important;
+    }
+    .drought-normal {
+        background:#e8f5e9;
+        border-left:5px solid #388e3c;
+        padding:15px; border-radius:8px;
+        color: #1a1a1a !important;
+    }
+    .drought-severe h2, .drought-severe h3,
+    .drought-severe p, .drought-severe b {
+        color: #1a1a1a !important;
+    }
+    .drought-moderate h2, .drought-moderate h3,
+    .drought-moderate p, .drought-moderate b {
+        color: #1a1a1a !important;
+    }
+    .drought-mild h2, .drought-mild h3,
+    .drought-mild p, .drought-mild b {
+        color: #1a1a1a !important;
+    }
+    .drought-normal h2, .drought-normal h3,
+    .drought-normal p, .drought-normal b {
+        color: #1a1a1a !important;
+    }
+    .chat-user {
+        background:#1565c0;
+        padding:10px 15px;
+        border-radius:18px 18px 4px 18px;
+        margin:8px 0;
+        color: white !important;
+    }
+    .chat-bot {
+        background:#2e7d32;
+        padding:10px 15px;
+        border-radius:18px 18px 18px 4px;
+        margin:8px 0;
+        color: white !important;
+    }
+    .chat-user b, .chat-user * {
+        color: white !important;
+    }
+    .chat-bot b, .chat-bot * {
+        color: white !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
