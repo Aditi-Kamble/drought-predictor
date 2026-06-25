@@ -7,3 +7,5 @@ spacy
 streamlit
 plotly
 requests
+python-dotenv
+google-generativeai
