@@ -145,6 +145,7 @@ with st.sidebar:
     page = st.radio("Go to", [
         "🏠 Home",
         "🔮 Drought Predictor",
+        "🌧️ Rainfall Forecast",
         "🤖 Farmer Chatbot",
         "📊 Data Insights"
     ])
@@ -424,7 +425,136 @@ elif page == "🔮 Drought Predictor":
             st.info(f"💡 {info['advice'][0]}")
 
 # ══════════════════════════════════════════════
-# PAGE 3 - FARMER CHATBOT
+# PAGE 3 - RAINFALL FORECAST (LSTM)
+# ══════════════════════════════════════════════
+elif page == "🌧️ Rainfall Forecast":
+    st.title("🌧️ AI Rainfall Forecaster")
+    st.markdown("Predict next 6 months rainfall using Deep Learning LSTM!")
+
+    st.info("🧠 Powered by PyTorch LSTM Neural Network — "
+            "trained on 24 years of Indian rainfall data")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        df_states   = pd.read_csv('data/rainfall_data.csv')
+        state_list  = ['All India'] + sorted(
+                           df_states['State'].unique().tolist())
+        selected    = st.selectbox("🗺️ Select State:", state_list)
+        months_fwd  = st.slider("📅 Forecast Months:", 3, 12, 6)
+
+    with col2:
+        st.markdown("### 📋 What LSTM Predicts:")
+        st.markdown("""
+- Monthly rainfall for next 6 months
+- Drought risk outlook
+- Crop planning advice
+- Water management tips
+        """)
+
+    if st.button("🔮 Generate Forecast", type="primary"):
+        with st.spinner("🧠 LSTM model training & forecasting..."):
+            from src.lstm_forecast import (forecast_rainfall,
+                                            get_forecast_summary)
+            state = None if selected == 'All India' else selected
+            predictions, historical = forecast_rainfall(
+                                          state, months_fwd)
+            summary = get_forecast_summary(predictions)
+
+        st.markdown("---")
+        st.subheader("📊 Rainfall Forecast Results")
+
+        # Outlook card
+        st.markdown(f"""
+        <div style='background: #1e3a1e; border-radius:12px;
+                    padding:20px; margin:10px 0;
+                    border-left: 6px solid #4a9e3f;'>
+            <h3 style='color:white; margin:0'>
+                {summary['outlook']}
+            </h3>
+            <p style='color:#90ee90; margin:10px 0'>
+                {summary['advice']}
+            </p>
+            <p style='color:white; margin:0'>
+                Total forecast: <b>{summary['total']} mm</b> |
+                Monthly avg: <b>{summary['avg']} mm</b>
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Forecast chart
+        import plotly.graph_objects as go
+        fig = go.Figure()
+
+        # Historical
+        hist_months = ['M-12','M-11','M-10','M-9','M-8',
+                       'M-7','M-6','M-5','M-4','M-3',
+                       'M-2','M-1']
+        fig.add_trace(go.Scatter(
+            x=hist_months,
+            y=historical,
+            mode='lines+markers',
+            name='Historical',
+            line=dict(color='#2196F3', width=2),
+            marker=dict(size=6)
+        ))
+
+        # Forecast
+        fig.add_trace(go.Scatter(
+            x=summary['month_names'],
+            y=summary['predictions'],
+            mode='lines+markers',
+            name='LSTM Forecast',
+            line=dict(color='#ff9800', width=3,
+                      dash='dash'),
+            marker=dict(size=8, symbol='star')
+        ))
+
+        fig.update_layout(
+            title=f'Rainfall Forecast — {selected}',
+            xaxis_title='Month',
+            yaxis_title='Rainfall (mm)',
+            legend=dict(x=0, y=1),
+            height=400
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Monthly breakdown
+        st.subheader("📅 Monthly Breakdown")
+        cols = st.columns(min(6, months_fwd))
+        for i in range(min(6, months_fwd)):
+            rain = summary['predictions'][i]
+            month = summary['month_names'][i]
+            if rain < 30:
+                color = "🔴"
+            elif rain < 70:
+                color = "🟡"
+            else:
+                color = "🟢"
+            cols[i].metric(f"{color} {month}",
+                           f"{rain:.0f}mm")
+
+        # Crop advice based on forecast
+        st.markdown("---")
+        st.subheader("🌱 Crop Planning Based on Forecast")
+        avg = summary['avg']
+        if avg < 30:
+            crops = "Bajra, Moth Bean, Amaranth"
+            tip   = "Only plant severe drought resistant crops!"
+        elif avg < 60:
+            crops = "Bajra, Jowar, Moong, Cluster Bean"
+            tip   = "Focus on drought tolerant crops."
+        elif avg < 100:
+            crops = "Maize, Soybean, Groundnut, Sunflower"
+            tip   = "Moderate water crops recommended."
+        else:
+            crops = "Rice, Wheat, Sugarcane, Cotton"
+            tip   = "Good rainfall — plant water-intensive crops!"
+
+        st.success(f"✅ Recommended crops: **{crops}**")
+        st.info(f"💡 {tip}")
+
+# ══════════════════════════════════════════════
+# PAGE 4 - FARMER CHATBOT
 # ══════════════════════════════════════════════
 elif page == "🤖 Farmer Chatbot":
     st.title("🤖 AI Farmer Chatbot")
@@ -487,7 +617,7 @@ elif page == "🤖 Farmer Chatbot":
         st.rerun()
 
 # ══════════════════════════════════════════════
-# PAGE 4 - DATA INSIGHTS
+# PAGE 5 - DATA INSIGHTS
 # ══════════════════════════════════════════════
 elif page == "📊 Data Insights":
     st.title("📊 India Rainfall & Drought Insights")
