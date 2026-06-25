@@ -248,19 +248,95 @@ if page == "🏠 Home":
 # PAGE 2 - DROUGHT PREDICTOR
 elif page == "🔮 Drought Predictor":
     st.title("🔮 Drought Level Predictor")
-    st.markdown("Enter your region's climate data to predict drought severity.")
+    st.markdown("Enter your city name to get live weather data or adjust manually!")
 
     ml_model, ml_scaler, ml_le = load_ml_model()
     dl_model, dl_scaler, dl_le = load_dl_model()
 
+    # Weather API section
+    st.subheader("🌤️ Fetch Live Weather Data")
+    API_KEY = os.getenv("WEATHER_API_KEY", "")
+
+    col_city, col_btn = st.columns([4, 1])
+    with col_city:
+        city_input = st.text_input("🏙️ Enter your city name:",
+                                    placeholder="e.g. Pune, Mumbai, Delhi, Jaipur")
+    with col_btn:
+        st.markdown("<br>", unsafe_allow_html=True)
+        fetch_btn = st.button("🌤️ Fetch Weather")
+
+    # Initialize default values
+    if 'annual_rain' not in st.session_state:
+        st.session_state.annual_rain   = 500
+        st.session_state.avg_temp      = 30
+        st.session_state.avg_humidity  = 50
+        st.session_state.soil_moisture = 30
+        st.session_state.deficit       = 25
+        st.session_state.city_name     = ""
+
+    if fetch_btn and city_input:
+        from src.weather import (get_weather, get_rainfall_estimate,
+                                  estimate_soil_moisture,
+                                  estimate_rainfall_deficit)
+        if not API_KEY:
+            st.error("❌ API Key not found! Add WEATHER_API_KEY to .env file")
+        else:
+            with st.spinner(f"Fetching weather for {city_input}..."):
+                weather, error = get_weather(city_input, API_KEY)
+
+            if error:
+                st.error(f"❌ {error}")
+            else:
+                rain_est     = get_rainfall_estimate(
+                                   weather['humidity'],
+                                   weather['description'])
+                soil_est     = estimate_soil_moisture(
+                                   weather['humidity'],
+                                   weather['description'])
+                deficit_est  = estimate_rainfall_deficit(rain_est)
+
+                st.session_state.annual_rain   = rain_est * 12
+                st.session_state.avg_temp      = weather['temperature']
+                st.session_state.avg_humidity  = weather['humidity']
+                st.session_state.soil_moisture = soil_est
+                st.session_state.deficit       = deficit_est
+                st.session_state.city_name     = weather['city']
+
+                # Show weather card
+                st.markdown(f"""
+                <div style='background:linear-gradient(135deg,#1565c0,#42a5f5);
+                            padding:20px; border-radius:12px; color:white;
+                            margin:10px 0'>
+                    <h3 style='color:white; margin:0'>
+                        🌤️ {weather['city']} — Live Weather
+                    </h3>
+                    <p style='color:white; margin:5px 0'>
+                        {weather['description']}
+                    </p>
+                    <div style='display:flex; gap:30px; margin-top:10px'>
+                        <span>🌡️ <b>{weather['temperature']}°C</b></span>
+                        <span>💧 <b>{weather['humidity']}%</b></span>
+                        <span>💨 <b>{weather['wind_speed']} km/h</b></span>
+                        <span>👁️ <b>{weather['visibility']} km</b></span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                st.success("✅ Weather data loaded! Sliders updated automatically.")
+
+    st.markdown("---")
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader("📥 Enter Climate Data")
-        annual_rain   = st.slider("🌧️ Annual Rainfall (mm)", 0, 3000, 500)
-        avg_temp      = st.slider("🌡️ Average Temperature (C)", 15, 45, 30)
-        avg_humidity  = st.slider("💧 Average Humidity (%)", 10, 100, 50)
-        soil_moisture = st.slider("🪱 Soil Moisture (%)", 5, 90, 30)
-        deficit       = st.slider("📉 Rainfall Deficit (%)", 0, 80, 25)
+        st.subheader("📥 Climate Data")
+        annual_rain   = st.slider("🌧️ Annual Rainfall (mm)", 0, 3000,
+                                   int(st.session_state.annual_rain))
+        avg_temp      = st.slider("🌡️ Average Temperature (C)", 15, 45,
+                                   int(st.session_state.avg_temp))
+        avg_humidity  = st.slider("💧 Average Humidity (%)", 10, 100,
+                                   int(st.session_state.avg_humidity))
+        soil_moisture = st.slider("🪱 Soil Moisture (%)", 5, 90,
+                                   int(st.session_state.soil_moisture))
+        deficit       = st.slider("📉 Rainfall Deficit (%)", 0, 80,
+                                   int(st.session_state.deficit))
 
     with col2:
         st.subheader("📊 Deficit Gauge")
