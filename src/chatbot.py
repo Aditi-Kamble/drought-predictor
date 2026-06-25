@@ -201,11 +201,35 @@ def get_fallback_response(user_input, drought_level):
 
 # Main Response Function
 def get_response(user_input, drought_level='moderate'):
-    # Try Gemini first
+    # Check if Hindi
+    from src.hindi_support import is_hindi, get_hindi_response
+    if is_hindi(user_input):
+        # Try Gemini for Hindi first
+        if GEMINI_AVAILABLE:
+            hindi_prompt = f"""आप एक भारतीय किसान सहायक हैं।
+सूखे का स्तर: {drought_level}
+किसान का प्रश्न: {user_input}
+कृपया हिंदी में संक्षिप्त और व्यावहारिक सलाह दें।
+3-4 वाक्यों में उत्तर दें।"""
+            try:
+                response = gemini_client.models.generate_content(
+                    model='gemini-2.0-flash-lite',
+                    contents=hindi_prompt
+                )
+                if response.text:
+                    return response.text
+            except:
+                pass
+        return get_hindi_response(
+            user_input, drought_level, CROP_ADVICE)
+
+    # English — Try Gemini first
     if GEMINI_AVAILABLE:
-        gemini_response = get_gemini_response(user_input, drought_level)
+        gemini_response = get_gemini_response(
+            user_input, drought_level)
         if gemini_response:
             return gemini_response
+
     # Fallback
     return get_fallback_response(user_input, drought_level)
 
