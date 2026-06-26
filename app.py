@@ -8,6 +8,7 @@ import os
 import plotly.express as px
 import plotly.graph_objects as go
 from dotenv import load_dotenv
+from PIL import Image
 
 # Load environment variables
 load_dotenv()
@@ -163,6 +164,7 @@ with st.sidebar:
         "🏠 Home",
         "🔮 Drought Predictor",
         "🌧️ Rainfall Forecast",
+	"🌿 Disease Detection",
         "🤖 Farmer Chatbot",
         "📊 Data Insights"
     ])
@@ -442,7 +444,143 @@ elif page == "🔮 Drought Predictor":
             st.info(f"💡 {info['advice'][0]}")
 
 # ══════════════════════════════════════════════
-# PAGE 3 - RAINFALL FORECAST (LSTM)
+# PAGE 3 - DISEASE DETECTION (CNN)
+# ══════════════════════════════════════════════
+elif page == "🌿 Disease Detection":
+    st.title("🌿 Crop Disease Detection")
+    st.markdown("Upload a leaf photo to detect diseases using AI!")
+
+    st.info("🧠 Powered by CNN (Convolutional Neural Network) "
+            "— Computer Vision AI")
+
+    # Language for disease page
+    lang = st.selectbox(
+        "🌐 Language / भाषा:",
+        ['English', 'हिंदी', 'मराठी'],
+        key='disease_lang'
+    )
+
+    st.markdown("---")
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("📸 Upload Leaf Image")
+        uploaded_file = st.file_uploader(
+            "Choose a leaf image",
+            type=['jpg', 'jpeg', 'png'],
+            help="Upload a clear photo of the crop leaf"
+        )
+
+        if uploaded_file:
+            image = Image.open(uploaded_file)
+            st.image(image, caption="Uploaded Leaf",
+                     use_column_width=True)
+
+        # Sample images tip
+        st.markdown("**💡 Tips for best results:**")
+        st.markdown("""
+- Use clear, well-lit photos
+- Focus on the affected leaf
+- Avoid blurry images
+- Single leaf works best
+        """)
+
+    with col2:
+        st.subheader("🔍 Detection Results")
+
+        if uploaded_file:
+            with st.spinner("🧠 CNN analyzing your crop..."):
+                from src.disease_detection import (
+                    predict_disease,
+                    DISEASE_INFO,
+                    get_disease_advice_marathi,
+                    get_disease_advice_hindi
+                )
+                from PIL import Image as PILImage
+                import time
+                time.sleep(1)  # Simulate processing
+
+                predicted, confidence, all_probs = predict_disease(image)
+                info = DISEASE_INFO[predicted]
+
+            # Result card
+            st.markdown(f"""
+            <div style='border-left: 6px solid {info["color"]};
+                        background: {info["color"]}22;
+                        padding: 20px; border-radius: 10px;
+                        margin: 10px 0'>
+                <h3 style='color: {info["color"]}; margin:0'>
+                    🔬 Detected: {predicted}
+                </h3>
+                <p style='color: {info["color"]}; margin: 5px 0'>
+                    Severity: <b>{info["severity"]}</b>
+                </p>
+                <p style='color: {info["color"]}; margin: 5px 0'>
+                    Confidence: <b>{confidence:.1f}%</b>
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Description
+            st.markdown("**📋 Description:**")
+            st.write(info['description'])
+
+            # Treatment
+            st.markdown("**💊 Treatment:**")
+            st.error(f"🚨 {info['treatment']}")
+
+            # Language specific advice
+            if lang == 'मराठी':
+                st.markdown("**🌾 मराठी सल्ला:**")
+                st.info(get_disease_advice_marathi(predicted))
+            elif lang == 'हिंदी':
+                st.markdown("**🇮🇳 हिंदी सलाह:**")
+                st.info(get_disease_advice_hindi(predicted))
+
+            # Prevention tips
+            st.markdown("**🛡️ Prevention Tips:**")
+            for tip in info['prevention']:
+                st.markdown(f"• {tip}")
+
+            # All probabilities chart
+            st.markdown("---")
+            st.subheader("📊 Disease Probability Chart")
+            import plotly.express as px
+            prob_df = pd.DataFrame({
+                'Disease': list(all_probs.keys()),
+                'Probability': list(all_probs.values())
+            })
+            fig = px.bar(
+                prob_df.sort_values('Probability'),
+                x='Probability', y='Disease',
+                orientation='h',
+                color='Probability',
+                color_continuous_scale='RdYlGn_r',
+                title='Disease Detection Probabilities'
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+        else:
+            st.markdown("""
+            <div style='text-align:center; padding:50px;
+                        border: 2px dashed #4a9e3f;
+                        border-radius:12px; color:#4a9e3f'>
+                <h3>📸 Upload a leaf image</h3>
+                <p>to detect diseases</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Show disease reference
+            st.markdown("---")
+            st.subheader("📚 Disease Reference Guide")
+            from src.disease_detection import DISEASE_INFO
+            for disease, info in DISEASE_INFO.items():
+                with st.expander(f"{disease} — {info['severity']} Severity"):
+                    st.write(f"**Description:** {info['description']}")
+                    st.write(f"**Treatment:** {info['treatment']}")
+
+# ══════════════════════════════════════════════
+# PAGE 4 - RAINFALL FORECAST (LSTM)
 # ══════════════════════════════════════════════
 elif page == "🌧️ Rainfall Forecast":
     st.title("🌧️ AI Rainfall Forecaster")
@@ -571,7 +709,7 @@ elif page == "🌧️ Rainfall Forecast":
         st.info(f"💡 {tip}")
 
 # ══════════════════════════════════════════════
-# PAGE 4 - FARMER CHATBOT
+# PAGE 5 - FARMER CHATBOT
 # ══════════════════════════════════════════════
 elif page == "🤖 Farmer Chatbot":
     st.title("🤖 AI Farmer Chatbot")
@@ -674,7 +812,7 @@ elif page == "🤖 Farmer Chatbot":
         st.rerun()
 
 # ══════════════════════════════════════════════
-# PAGE 5 - DATA INSIGHTS
+# PAGE 6 - DATA INSIGHTS
 # ══════════════════════════════════════════════
 elif page == "📊 Data Insights":
     st.title("📊 India Rainfall & Drought Insights")
