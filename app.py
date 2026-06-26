@@ -15,6 +15,23 @@ load_dotenv()
 sys.path.append('src')
 from chatbot import get_response
 
+def get_language_response(user_input, drought_level, language):
+    if language == 'हिंदी ':
+        try:
+            from hindi_support import get_hindi_response
+            from chatbot import CROP_ADVICE
+            return get_hindi_response(
+                user_input, drought_level, CROP_ADVICE)
+        except:
+            return get_response(user_input, drought_level)
+    elif language == 'मराठी ':
+        try:
+            from marathi_support import get_marathi_response
+            return get_marathi_response(user_input, drought_level)
+        except:
+            return get_response(user_input, drought_level)
+    else:
+        return get_response(user_input, drought_level)
 # Try importing torch
 try:
     import torch
@@ -560,11 +577,27 @@ elif page == "🤖 Farmer Chatbot":
     st.title("🤖 AI Farmer Chatbot")
     st.markdown("Ask me anything about farming, drought, crops, irrigation!")
 
-    drought_level = st.selectbox(
-        "🌵 Current Drought Level in your area:",
-        ['normal', 'mild', 'moderate', 'severe'],
-        index=2
-    )
+    col1, col2 = st.columns(2)
+    with col1:
+        drought_level = st.selectbox(
+            "🌵 Current Drought Level:",
+            ['normal', 'mild', 'moderate', 'severe'],
+            index=2
+        )
+    with col2:
+        language = st.selectbox(
+            "🌐 Select Language / भाषा निवडा:",
+            ['English', 'हिंदी ', 'मराठी '],
+            index=0
+        )
+
+    # Language info
+    if language == 'हिंदी ':
+        st.info("हिंदी मोड चालू है। हिंदी में पूछें!")
+    elif language == 'मराठी ':
+        st.info("मराठी मोड सुरू आहे। मराठीत विचारा!")
+    else:
+        st.info("English mode active. Ask in English!")
 
     if 'messages' not in st.session_state:
         st.session_state.messages = []
@@ -595,25 +628,49 @@ elif page == "🤖 Farmer Chatbot":
         st.markdown("<br>", unsafe_allow_html=True)
         send = st.button("Send 📨")
 
+    # Quick questions based on language
     st.markdown("**Quick Questions:**")
     qcols = st.columns(4)
-    quick_qs = [
-        "What crops to grow?",
-        "How to save water?",
-        "Government schemes?",
-        "Soil management tips?"
-    ]
+
+    if language == 'हिंदी ':
+        quick_qs = [
+            "कौन सी फसल उगाएं?",
+            "पानी कैसे बचाएं?",
+            "सरकारी योजना?",
+            "मिट्टी की देखभाल?"
+        ]
+    elif language == 'मराठी ':
+        quick_qs = [
+            "कोणते पीक घ्यावे?",
+            "पाणी कसे वाचवावे?",
+            "सरकारी योजना?",
+            "माती व्यवस्थापन?"
+        ]
+    else:
+        quick_qs = [
+            "What crops to grow?",
+            "How to save water?",
+            "Government schemes?",
+            "Soil management tips?"
+        ]
+
     for i, q in enumerate(quick_qs):
         if qcols[i].button(q):
-            response = get_response(q, drought_level)
-            st.session_state.messages.append({'role': 'user', 'text': q})
-            st.session_state.messages.append({'role': 'bot', 'text': response})
+            response = get_language_response(
+                q, drought_level, language)
+            st.session_state.messages.append(
+                {'role': 'user', 'text': q})
+            st.session_state.messages.append(
+                {'role': 'bot', 'text': response})
             st.rerun()
 
     if send and user_input:
-        response = get_response(user_input, drought_level)
-        st.session_state.messages.append({'role': 'user', 'text': user_input})
-        st.session_state.messages.append({'role': 'bot', 'text': response})
+        response = get_language_response(
+            user_input, drought_level, language)
+        st.session_state.messages.append(
+            {'role': 'user', 'text': user_input})
+        st.session_state.messages.append(
+            {'role': 'bot', 'text': response})
         st.rerun()
 
 # ══════════════════════════════════════════════
