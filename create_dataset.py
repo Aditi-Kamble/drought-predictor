@@ -6,9 +6,13 @@ np.random.seed(42)
 
 # Indian states
 states = [
-    'Andhra Pradesh', 'Bihar', 'Gujarat', 'Haryana', 'Karnataka',
-    'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Punjab', 'Rajasthan',
-    'Tamil Nadu', 'Uttar Pradesh', 'West Bengal', 'Odisha', 'Jharkhand'
+    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar',
+    'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana',
+    'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala',
+    'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya',
+    'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
+    'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana',
+    'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
 ]
 
 months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -34,6 +38,19 @@ for state in states:
         'Haryana': [25,20,15,8,12,35,100,90,50,8,5,18],
         'Odisha': [15,20,25,30,60,150,280,300,220,100,40,15],
         'Jharkhand': [20,20,20,25,50,150,280,290,200,60,20,15],
+	 'Arunachal Pradesh':[30,35,50,100,200,380,420,400,300,150,60,30],
+    	'Assam':            [25,30,45,120,220,380,420,380,280,120,40,20],
+    	'Chhattisgarh':     [15,12,15,20,40,150,280,300,200,50,15,12],
+    	'Goa':              [5,5,5,10,30,200,350,300,200,100,30,10],
+    	'Himachal Pradesh': [50,45,40,30,25,60,150,140,80,30,20,40],
+    	'Manipur':          [25,30,45,100,180,320,380,350,260,100,35,20],
+    	'Meghalaya':        [30,35,60,150,300,500,550,480,350,180,60,30],
+    	'Mizoram':          [20,25,40,100,200,380,400,350,280,120,40,20],
+    	'Nagaland':         [25,30,50,110,200,360,400,370,270,110,40,25],
+    	'Sikkim':           [30,35,55,120,220,380,420,400,300,140,55,30],
+    	'Telangana':        [8,8,10,18,35,55,115,120,140,95,55,12],
+    	'Tripura':          [20,25,40,100,180,320,360,330,250,100,35,18],
+    	'Uttarakhand':      [40,38,35,25,20,55,140,130,75,25,18,35],
     }
 
     state_base = base.get(state, [20]*12)

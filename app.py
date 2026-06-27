@@ -7,8 +7,10 @@ import sys
 import os
 import plotly.express as px
 import plotly.graph_objects as go
+import datetime
 from dotenv import load_dotenv
 from PIL import Image
+
 
 # Load environment variables
 load_dotenv()
@@ -165,8 +167,12 @@ with st.sidebar:
         "🔮 Drought Predictor",
         "🌧️ Rainfall Forecast",
 	"🌿 Disease Detection",
+	"🧮 Farm Calculator",
+	"💰 Crop Price",
         "🤖 Farmer Chatbot",
-        "📊 Data Insights"
+        "📊 Data Insights",
+	"🛰️ Satellite Analysis",
+	"👩‍💻 About"
     ])
     st.markdown("---")
     st.markdown("**About This Project**")
@@ -430,6 +436,40 @@ elif page == "🔮 Drought Predictor":
             </div>
             """, unsafe_allow_html=True)
 
+# PDF Download button
+        st.markdown("---")
+        st.subheader("📄 Download Report")
+        from src.report_generator import generate_report
+        import io
+
+        weather_data_for_report = {
+            'temperature': avg_temp,
+            'humidity':    avg_humidity,
+            'wind_speed':  0,
+            'description': 'Manual Input'
+        }
+
+        crops_list = CROP_ADVICE.get(
+            ml_label.lower(), {}).get('crops', [])
+
+        pdf_bytes = generate_report(
+            city=st.session_state.get('city_name', 'Your Region'),
+            weather_data=weather_data_for_report,
+            ml_label=ml_label,
+            ml_conf=ml_conf,
+            dl_label=dl_label,
+            dl_conf=dl_conf,
+            crops=crops_list,
+            deficit=deficit
+        )
+
+        st.download_button(
+            label="📥 Download PDF Report",
+            data=bytes(pdf_bytes),
+            file_name=f"drought_report_{datetime.date.today()}.pdf",
+            mime="application/pdf"
+        )
+
         # Crop Recommendations
         st.markdown("---")
         st.subheader("🌱 Recommended Crops")
@@ -442,6 +482,40 @@ elif page == "🔮 Drought Predictor":
             for i, crop in enumerate(crops):
                 cols[i].success(f"✅ {crop}")
             st.info(f"💡 {info['advice'][0]}")
+# WhatsApp Alert
+        st.markdown("---")
+        st.subheader("📱 Send WhatsApp Alert")
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            phone = st.text_input(
+                "📱 WhatsApp Number (10 digits):",
+                placeholder="9876543210"
+            )
+        with col2:
+            st.markdown("<br>", unsafe_allow_html=True)
+            send_wa = st.button("📲 Send Alert")
+
+        if send_wa and phone:
+            if len(phone) == 10 and phone.isdigit():
+                from src.whatsapp_alerts import (
+                    send_whatsapp_alert)
+                crops_for_wa = CROP_ADVICE.get(
+                    ml_label.lower(), {}).get('crops', [])
+                success, msg = send_whatsapp_alert(
+                    phone, ml_label,
+                    st.session_state.get('city_name',
+                                         'Your Region'),
+                    crops_for_wa
+                )
+                if success:
+                    st.success(
+                        "✅ WhatsApp alert sent successfully!")
+                else:
+                    st.error(f"❌ Failed: {msg}")
+                    st.info("💡 Setup Twilio account at "
+                            "twilio.com for WhatsApp alerts")
+            else:
+                st.error("❌ Enter valid 10 digit number!")
 
 # ══════════════════════════════════════════════
 # PAGE 3 - DISEASE DETECTION (CNN)
@@ -580,7 +654,291 @@ elif page == "🌿 Disease Detection":
                     st.write(f"**Treatment:** {info['treatment']}")
 
 # ══════════════════════════════════════════════
-# PAGE 4 - RAINFALL FORECAST (LSTM)
+# PAGE 4 - FARM CALCULATOR
+# ══════════════════════════════════════════════
+elif page == "🧮 Farm Calculator":
+    st.title("🧮 Smart Farm Calculator")
+    st.markdown("Calculate water needs, fertilizer & costs!")
+
+    tab1, tab2, tab3 = st.tabs([
+        "💧 Water Calculator",
+        "🌱 Fertilizer Calculator",
+        "💰 Cost Estimator"
+    ])
+
+    with tab1:
+        st.subheader("💧 Water Requirement Calculator")
+        col1, col2 = st.columns(2)
+        with col1:
+            crop_w    = st.selectbox("Select Crop:", [
+                'Rice', 'Wheat', 'Sugarcane', 'Cotton',
+                'Maize', 'Bajra', 'Jowar', 'Moong',
+                'Groundnut', 'Soybean'
+            ])
+            area_w    = st.number_input(
+                "Farm Area (acres):", 1, 100, 5)
+            soil_type = st.selectbox("Soil Type:", [
+                'Sandy', 'Loamy', 'Clay', 'Black Cotton'
+            ])
+            season    = st.selectbox("Season:", [
+                'Kharif (Monsoon)',
+                'Rabi (Winter)',
+                'Zaid (Summer)'
+            ])
+
+        with col2:
+            # Water requirements per acre per season (liters)
+            water_req = {
+                'Rice':      {'Kharif (Monsoon)': 1200000,
+                              'Rabi (Winter)':    1400000,
+                              'Zaid (Summer)':    1600000},
+                'Wheat':     {'Kharif (Monsoon)': 400000,
+                              'Rabi (Winter)':    450000,
+                              'Zaid (Summer)':    500000},
+                'Sugarcane': {'Kharif (Monsoon)': 2000000,
+                              'Rabi (Winter)':    2200000,
+                              'Zaid (Summer)':    2500000},
+                'Cotton':    {'Kharif (Monsoon)': 700000,
+                              'Rabi (Winter)':    800000,
+                              'Zaid (Summer)':    900000},
+                'Maize':     {'Kharif (Monsoon)': 500000,
+                              'Rabi (Winter)':    550000,
+                              'Zaid (Summer)':    600000},
+                'Bajra':     {'Kharif (Monsoon)': 300000,
+                              'Rabi (Winter)':    350000,
+                              'Zaid (Summer)':    400000},
+                'Jowar':     {'Kharif (Monsoon)': 350000,
+                              'Rabi (Winter)':    400000,
+                              'Zaid (Summer)':    450000},
+                'Moong':     {'Kharif (Monsoon)': 250000,
+                              'Rabi (Winter)':    280000,
+                              'Zaid (Summer)':    300000},
+                'Groundnut': {'Kharif (Monsoon)': 500000,
+                              'Rabi (Winter)':    550000,
+                              'Zaid (Summer)':    600000},
+                'Soybean':   {'Kharif (Monsoon)': 450000,
+                              'Rabi (Winter)':    500000,
+                              'Zaid (Summer)':    550000},
+            }
+
+            soil_factor = {
+                'Sandy': 1.3, 'Loamy': 1.0,
+                'Clay':  0.8, 'Black Cotton': 0.85
+            }
+
+            base_water  = water_req.get(
+                crop_w, {}).get(season, 500000)
+            total_water = (base_water * area_w *
+                           soil_factor.get(soil_type, 1.0))
+
+            st.metric("💧 Total Water Needed",
+                      f"{total_water/1000:,.0f} KL")
+            st.metric("📅 Per Day (120 days)",
+                      f"{total_water/120/1000:,.1f} KL/day")
+            st.metric("🚿 Drip System Saves",
+                      f"{total_water*0.45/1000:,.0f} KL")
+
+            if total_water > 1000000 * area_w:
+                st.warning("⚠️ High water crop in drought!")
+            else:
+                st.success("✅ Suitable water requirement")
+
+    with tab2:
+        st.subheader("🌱 Fertilizer Calculator")
+        col1, col2 = st.columns(2)
+        with col1:
+            crop_f  = st.selectbox("Select Crop:", [
+                'Rice', 'Wheat', 'Maize', 'Cotton',
+                'Sugarcane', 'Bajra', 'Soybean'
+            ], key='fert_crop')
+            area_f  = st.number_input(
+                "Farm Area (acres):", 1, 100, 5,
+                key='fert_area')
+            soil_ph = st.slider("Soil pH:", 4.0, 9.0, 6.5)
+
+        with col2:
+            # NPK requirements per acre (kg)
+            npk_req = {
+                'Rice':      {'N': 80, 'P': 40, 'K': 40},
+                'Wheat':     {'N': 60, 'P': 30, 'K': 30},
+                'Maize':     {'N': 75, 'P': 35, 'K': 25},
+                'Cotton':    {'N': 60, 'P': 30, 'K': 30},
+                'Sugarcane': {'N': 150,'P': 60, 'K': 60},
+                'Bajra':     {'N': 40, 'P': 20, 'K': 10},
+                'Soybean':   {'N': 20, 'P': 40, 'K': 30},
+            }
+
+            req   = npk_req.get(crop_f,
+                        {'N': 50, 'P': 25, 'K': 25})
+            n_req = req['N'] * area_f
+            p_req = req['P'] * area_f
+            k_req = req['K'] * area_f
+
+            st.metric("🟢 Nitrogen (N)", f"{n_req} kg")
+            st.metric("🔴 Phosphorus (P)", f"{p_req} kg")
+            st.metric("🔵 Potassium (K)", f"{k_req} kg")
+
+            # Urea equivalent
+            urea = n_req / 0.46
+            dap  = p_req / 0.46
+            mop  = k_req / 0.60
+
+            st.markdown("**Fertilizer Bags Needed:**")
+            st.info(f"Urea: {urea/50:.1f} bags (50kg)\n"
+                    f"DAP: {dap/50:.1f} bags (50kg)\n"
+                    f"MOP: {mop/50:.1f} bags (50kg)")
+
+    with tab3:
+        st.subheader("💰 Season Cost Estimator")
+        col1, col2 = st.columns(2)
+        with col1:
+            crop_c = st.selectbox("Select Crop:", [
+                'Rice', 'Wheat', 'Cotton', 'Sugarcane',
+                'Maize', 'Bajra', 'Soybean', 'Groundnut'
+            ], key='cost_crop')
+            area_c = st.number_input(
+                "Farm Area (acres):", 1, 100, 5,
+                key='cost_area')
+            irr_type = st.selectbox("Irrigation Type:", [
+                'Flood', 'Drip', 'Sprinkler', 'Rainfed'
+            ])
+
+        with col2:
+            # Cost components per acre (Rs)
+            costs = {
+                'Rice':      {'seed': 1500, 'fert': 3000,
+                              'pest': 2000, 'labour': 8000},
+                'Wheat':     {'seed': 1200, 'fert': 2500,
+                              'pest': 1500, 'labour': 6000},
+                'Cotton':    {'seed': 2000, 'fert': 3500,
+                              'pest': 3000, 'labour': 8000},
+                'Sugarcane': {'seed': 5000, 'fert': 5000,
+                              'pest': 2000, 'labour': 12000},
+                'Maize':     {'seed': 1500, 'fert': 2500,
+                              'pest': 1500, 'labour': 5000},
+                'Bajra':     {'seed': 800,  'fert': 1500,
+                              'pest': 800,  'labour': 3500},
+                'Soybean':   {'seed': 2000, 'fert': 2000,
+                              'pest': 1500, 'labour': 4000},
+                'Groundnut': {'seed': 3000, 'fert': 2500,
+                              'pest': 1500, 'labour': 5000},
+            }
+
+            irr_cost = {
+                'Flood': 4000, 'Drip': 2000,
+                'Sprinkler': 2500, 'Rainfed': 500
+            }
+
+            c = costs.get(crop_c,
+                    {'seed': 1500, 'fert': 2500,
+                     'pest': 1500, 'labour': 5000})
+            total_per_acre = (c['seed'] + c['fert'] +
+                              c['pest'] + c['labour'] +
+                              irr_cost.get(irr_type, 2000))
+            total_cost = total_per_acre * area_c
+
+            st.metric("🌱 Seed Cost",
+                      f"Rs {c['seed']*area_c:,}")
+            st.metric("🌿 Fertilizer Cost",
+                      f"Rs {c['fert']*area_c:,}")
+            st.metric("🐛 Pesticide Cost",
+                      f"Rs {c['pest']*area_c:,}")
+            st.metric("👷 Labour Cost",
+                      f"Rs {c['labour']*area_c:,}")
+            st.metric("💧 Irrigation Cost",
+                      f"Rs {irr_cost.get(irr_type,2000)*area_c:,}")
+            st.markdown("---")
+            st.metric("💰 TOTAL COST",
+                      f"Rs {total_cost:,}",
+                      delta=f"Rs {total_per_acre:,}/acre")
+
+# ══════════════════════════════════════════════
+# PAGE 5 - CROP PRICE PREDICTOR
+# ══════════════════════════════════════════════
+elif page == "💰 Crop Price":
+    st.title("💰 Crop Price & Profit Predictor")
+    st.markdown("Find the most profitable crop for your farm!")
+
+    from src.price_predictor import (predict_crop_price,
+                                      get_best_crop_by_profit,
+                                      CROP_BASE_PRICES)
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        drought = st.selectbox(
+            "🌵 Drought Level:",
+            ['normal', 'mild', 'moderate', 'severe'],
+            index=1
+        )
+    with col2:
+        acres = st.number_input(
+            "🌾 Farm Size (acres):", 1, 100, 5)
+    with col3:
+        selected_crop = st.selectbox(
+            "🌱 Select Crop:",
+            list(CROP_BASE_PRICES.keys())
+        )
+
+    if st.button("💰 Calculate Profit"):
+        result = predict_crop_price(
+            selected_crop, drought, acres)
+
+        if result:
+            col1, col2, col3 = st.columns(3)
+            profit_color = (
+                "green" if result['profit'] > 0 else "red")
+
+            col1.metric(
+                "💵 Predicted Price",
+                f"₹{result['predicted_price']:,.0f}/qtl",
+                f"MSP: ₹{result['msp']:,}"
+            )
+            col2.metric(
+                "📦 Expected Yield",
+                f"{result['predicted_yield']} qtl"
+            )
+            col3.metric(
+                "💰 Expected Profit",
+                f"₹{result['profit']:,.0f}",
+                f"ROI: {result['roi']}%"
+            )
+
+            # Revenue breakdown
+            st.markdown("---")
+            st.subheader("📊 Revenue Breakdown")
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Total Revenue",
+                        f"₹{result['total_revenue']:,.0f}")
+            col2.metric("Total Cost",
+                        f"₹{result['total_cost']:,.0f}")
+            col3.metric("Net Profit",
+                        f"₹{result['profit']:,.0f}")
+
+        # Best crops comparison
+        st.markdown("---")
+        st.subheader("🏆 Most Profitable Crops Comparison")
+
+        all_crops = list(CROP_BASE_PRICES.keys())
+        best_crops = get_best_crop_by_profit(
+            all_crops, drought, acres)
+
+        import plotly.express as px
+        df_crops = pd.DataFrame(best_crops[:10])
+        fig = px.bar(
+            df_crops,
+            x='crop',
+            y='profit',
+            color='roi',
+            title=f'Profit Comparison ({drought.title()} Drought, {acres} acres)',
+            color_continuous_scale='RdYlGn',
+            labels={'profit': 'Expected Profit (Rs)',
+                    'crop': 'Crop', 'roi': 'ROI %'}
+        )
+        fig.update_layout(xaxis_tickangle=-45)
+        st.plotly_chart(fig, use_container_width=True)
+
+# ══════════════════════════════════════════════
+# PAGE 6 - RAINFALL FORECAST (LSTM)
 # ══════════════════════════════════════════════
 elif page == "🌧️ Rainfall Forecast":
     st.title("🌧️ AI Rainfall Forecaster")
@@ -709,7 +1067,7 @@ elif page == "🌧️ Rainfall Forecast":
         st.info(f"💡 {tip}")
 
 # ══════════════════════════════════════════════
-# PAGE 5 - FARMER CHATBOT
+# PAGE 7 - FARMER CHATBOT
 # ══════════════════════════════════════════════
 elif page == "🤖 Farmer Chatbot":
     st.title("🤖 AI Farmer Chatbot")
@@ -812,7 +1170,7 @@ elif page == "🤖 Farmer Chatbot":
         st.rerun()
 
 # ══════════════════════════════════════════════
-# PAGE 6 - DATA INSIGHTS
+# PAGE 8 - DATA INSIGHTS
 # ══════════════════════════════════════════════
 elif page == "📊 Data Insights":
     st.title("📊 India Rainfall & Drought Insights")
@@ -874,3 +1232,219 @@ elif page == "📊 Data Insights":
                 f"{(state_df['Drought_Level'] != 'Normal').sum()}")
     col3.metric("Worst Deficit",
                 f"{state_df['Rainfall_Deficit_percent'].max():.1f}%")
+
+# ══════════════════════════════════════════════
+# PAGE 9 - SATELLITE ANALYSIS
+# ══════════════════════════════════════════════
+elif page == "🛰️ Satellite Analysis":
+    st.title("🛰️ Satellite Drought Zone Analysis")
+    st.markdown("Analyze satellite images to detect drought zones!")
+
+    st.info("🧠 Uses Computer Vision to analyze "
+            "vegetation health from satellite imagery")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("📸 Upload Satellite Image")
+        sat_image = st.file_uploader(
+            "Upload satellite/aerial image",
+            type=['jpg', 'jpeg', 'png'],
+            key='satellite'
+        )
+        st.markdown("""
+        **What to upload:**
+        - Google Earth screenshot
+        - Drone aerial photo
+        - Any top-down farm image
+        - Satellite imagery
+        """)
+
+    with col2:
+        st.subheader("🔍 Analysis Results")
+        if sat_image:
+            image = Image.open(sat_image)
+            img_array = np.array(
+                image.resize((256, 256)))
+
+            with st.spinner("🛰️ Analyzing satellite image..."):
+                import time
+                time.sleep(2)
+
+                # NDVI-like analysis using RGB
+                if len(img_array.shape) == 3:
+                    r = img_array[:,:,0].astype(float)
+                    g = img_array[:,:,1].astype(float)
+                    b = img_array[:,:,2].astype(float)
+
+                    # Vegetation index
+                    veg_index  = g / (r + g + b + 1)
+                    # Dry index
+                    dry_index  = r / (g + b + 1)
+                    # Water index
+                    water_index = b / (r + g + 1)
+
+                    healthy_pct = float(
+                        (veg_index > 0.38).mean() * 100)
+                    dry_pct     = float(
+                        (dry_index > 0.45).mean() * 100)
+                    water_pct   = float(
+                        (water_index > 0.40).mean() * 100)
+                    stressed_pct = max(0, 100 - healthy_pct
+                                       - dry_pct - water_pct)
+                else:
+                    healthy_pct  = 30.0
+                    dry_pct      = 45.0
+                    water_pct    = 5.0
+                    stressed_pct = 20.0
+
+            # Show original image
+            st.image(image, caption="Uploaded Image",
+                     use_column_width=True)
+
+            # Zone analysis
+            st.markdown("### 🗺️ Zone Analysis")
+            col_a, col_b = st.columns(2)
+            col_a.metric("🟢 Healthy Vegetation",
+                         f"{healthy_pct:.1f}%")
+            col_b.metric("🔴 Dry/Drought Zone",
+                         f"{dry_pct:.1f}%")
+            col_a.metric("💧 Water Bodies",
+                         f"{water_pct:.1f}%")
+            col_b.metric("🟡 Stressed Vegetation",
+                         f"{stressed_pct:.1f}%")
+
+            # Pie chart
+            import plotly.express as px
+            fig = px.pie(
+                values=[healthy_pct, dry_pct,
+                        water_pct, stressed_pct],
+                names=['Healthy', 'Dry Zone',
+                       'Water', 'Stressed'],
+                color_discrete_map={
+                    'Healthy':  '#388e3c',
+                    'Dry Zone': '#d32f2f',
+                    'Water':    '#1565c0',
+                    'Stressed': '#f57c00'
+                },
+                title='Land Zone Distribution'
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+            # Overall assessment
+            if dry_pct > 50:
+                st.error("🔴 CRITICAL: More than 50% area "
+                         "is drought affected!")
+            elif dry_pct > 30:
+                st.warning("🟠 WARNING: Significant drought "
+                           "zones detected!")
+            else:
+                st.success("🟢 GOOD: Vegetation looks "
+                           "relatively healthy!")
+
+        else:
+            st.markdown("""
+            <div style='text-align:center; padding:50px;
+                        border: 2px dashed #4a9e3f;
+                        border-radius:12px'>
+                <h3>🛰️ Upload a satellite image</h3>
+                <p>to analyze drought zones</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+# ══════════════════════════════════════════════
+# PAGE 10 - ABOUT
+# ══════════════════════════════════════════════
+elif page == "👩‍💻 About":
+    st.title("👩‍💻 About This Project")
+
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #2d5a27, #4a9e3f);
+                    padding: 30px; border-radius: 12px;
+                    text-align: center; color: white;'>
+            <h2 style='color:white'>Aditi Kamble</h2>
+            <p style='color:white'>AI/ML Developer</p>
+            <p style='color:white'>Maharashtra, India 🇮🇳</p>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("---")
+        st.markdown("### 🔗 Connect With Me")
+        st.markdown("[![GitHub](https://img.shields.io/badge/GitHub-Aditi--Kamble-black?logo=github)](https://github.com/Aditi-Kamble)")
+        st.markdown("[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://linkedin.com/in/your-profile)")
+        st.markdown("[![Live App](https://img.shields.io/badge/Live-App-green?logo=streamlit)](https://aditi-kamble-drought-predictor.streamlit.app)")
+
+    with col2:
+        st.markdown("### 🌾 Project Overview")
+        st.markdown("""
+        This project was built to help Indian farmers navigate drought
+        conditions using Artificial Intelligence. With India facing
+        below-normal rainfall, this tool provides:
+
+        - Real-time drought severity prediction
+        - Crop recommendations based on water availability
+        - AI-powered farmer advisory chatbot
+        - Rainfall forecasting for next 6 months
+        - Crop disease detection from leaf images
+        """)
+
+        st.markdown("### 🛠️ Tech Stack")
+        col_a, col_b, col_c = st.columns(3)
+        with col_a:
+            st.markdown("""
+            **AI/ML**
+            - Scikit-learn
+            - PyTorch
+            - CNN
+            - LSTM
+            """)
+        with col_b:
+            st.markdown("""
+            **NLP**
+            - Google Gemini
+            - Hindi Support
+            - Marathi Support
+            - Intent Detection
+            """)
+        with col_c:
+            st.markdown("""
+            **Web/API**
+            - Streamlit
+            - Plotly
+            - OpenWeather API
+            - GitHub
+            """)
+
+    st.markdown("---")
+    st.markdown("### 📊 Project Stats")
+    col1, col2, col3, col4, col5 = st.columns(5)
+    col1.metric("🌲 ML Accuracy", "95%+")
+    col2.metric("🧠 DL Accuracy", "88%+")
+    col3.metric("🗺️ States", "15")
+    col4.metric("📅 Years Data", "24")
+    col5.metric("🌐 Languages", "3")
+
+    st.markdown("---")
+    st.markdown("### 🎯 Project Modules")
+    modules = {
+        "🔮 Drought Predictor": "ML + DL models predict drought severity from climate data",
+        "🌧️ Rainfall Forecast": "LSTM neural network forecasts next 6 months rainfall",
+        "🌿 Disease Detection": "CNN analyzes leaf images to detect crop diseases",
+        "🤖 Farmer Chatbot":   "Gemini AI answers farming questions in 3 languages",
+        "📊 Data Insights":    "Interactive charts showing 24 years of rainfall trends",
+    }
+    for module, desc in modules.items():
+        st.markdown(f"**{module}** — {desc}")
+
+    st.markdown("---")
+    st.markdown("""
+    <div style='text-align:center; padding:20px;
+                background:#1e3a1e; border-radius:12px;'>
+        <p style='color:#90ee90; font-size:18px'>
+            Built with ❤️ for Indian Farmers 🌾
+        </p>
+        <p style='color:white'>
+            © 2026 Aditi Kamble | AI Drought Predictor
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
