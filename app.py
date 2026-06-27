@@ -194,61 +194,307 @@ if page == "🏠 Home":
     <div class='main-header'>
         <h1>🌾 AI Drought Predictor & Farmer Assistant</h1>
         <p>Helping Indian farmers survive drought with Artificial Intelligence</p>
+        <p>Covering 28 Indian States | 24 Years of Data | 9 AI Features</p>
     </div>
     """, unsafe_allow_html=True)
 
-    col1, col2, col3, col4 = st.columns(4)
+    # Key Metrics
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
     with col1:
-        st.metric("🌧️ States Covered", "15")
+        st.metric("🗺️ States", "28")
     with col2:
-        st.metric("📅 Years of Data", "24 (2000-2023)")
+        st.metric("📅 Years", "24")
     with col3:
         st.metric("🌲 ML Accuracy", "95%+")
     with col4:
         st.metric("🧠 DL Accuracy", "88%+")
+    with col5:
+        st.metric("🌐 Languages", "3")
+    with col6:
+        st.metric("⚡ Features", "9")
 
     st.markdown("---")
-    col1, col2 = st.columns(2)
+
+    # Feature Cards
+    st.subheader("🚀 What This App Can Do")
+    col1, col2, col3 = st.columns(3)
+
     with col1:
-        st.subheader("🎯 What This App Does")
         st.markdown("""
-- Predicts drought severity using ML + DL models
-- Recommends crops suitable for current drought level
-- AI Chatbot answers farmer queries in plain English
-- Data Insights show rainfall trends across India
-        """)
+        <div style='background:#1e3a1e; padding:15px;
+                    border-radius:10px; margin:5px 0;
+                    border-left:4px solid #4a9e3f'>
+            <h4 style='color:#4a9e3f; margin:0'>
+                🔮 Drought Predictor
+            </h4>
+            <p style='color:white; font-size:13px'>
+                ML + DL models predict drought severity
+                using live weather data from any Indian city
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
+        <div style='background:#1e3a1e; padding:15px;
+                    border-radius:10px; margin:5px 0;
+                    border-left:4px solid #4a9e3f'>
+            <h4 style='color:#4a9e3f; margin:0'>
+                🌧️ Rainfall Forecast
+            </h4>
+            <p style='color:white; font-size:13px'>
+                LSTM Deep Learning predicts next
+                6 months rainfall for any state
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
+        <div style='background:#1e3a1e; padding:15px;
+                    border-radius:10px; margin:5px 0;
+                    border-left:4px solid #4a9e3f'>
+            <h4 style='color:#4a9e3f; margin:0'>
+                📄 PDF Reports
+            </h4>
+            <p style='color:white; font-size:13px'>
+                Download complete drought analysis
+                report with crop & scheme advice
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
     with col2:
-        st.subheader("🚀 How to Use")
         st.markdown("""
-1. Go to **Drought Predictor** → enter your city name
-2. Fetch live weather → get instant drought prediction
-3. Visit **Farmer Chatbot** → ask any farming question
-4. Explore **Data Insights** for rainfall trends
-        """)
+        <div style='background:#1e3a1e; padding:15px;
+                    border-radius:10px; margin:5px 0;
+                    border-left:4px solid #2196F3'>
+            <h4 style='color:#2196F3; margin:0'>
+                🌿 Disease Detection
+            </h4>
+            <p style='color:white; font-size:13px'>
+                CNN Computer Vision analyzes leaf
+                photos to detect crop diseases
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
+        <div style='background:#1e3a1e; padding:15px;
+                    border-radius:10px; margin:5px 0;
+                    border-left:4px solid #2196F3'>
+            <h4 style='color:#2196F3; margin:0'>
+                🛰️ Satellite Analysis
+            </h4>
+            <p style='color:white; font-size:13px'>
+                Computer Vision detects drought
+                zones from satellite imagery
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
+        <div style='background:#1e3a1e; padding:15px;
+                    border-radius:10px; margin:5px 0;
+                    border-left:4px solid #2196F3'>
+            <h4 style='color:#2196F3; margin:0'>
+                📊 Data Insights
+            </h4>
+            <p style='color:white; font-size:13px'>
+                24 years of rainfall trends across
+                28 Indian states with interactive charts
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col3:
+        st.markdown("""
+        <div style='background:#1e3a1e; padding:15px;
+                    border-radius:10px; margin:5px 0;
+                    border-left:4px solid #f57c00'>
+            <h4 style='color:#f57c00; margin:0'>
+                🤖 AI Farmer Chatbot
+            </h4>
+            <p style='color:white; font-size:13px'>
+                Gemini AI answers farming questions
+                in English, Hindi and Marathi
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
+        <div style='background:#1e3a1e; padding:15px;
+                    border-radius:10px; margin:5px 0;
+                    border-left:4px solid #f57c00'>
+            <h4 style='color:#f57c00; margin:0'>
+                🧮 Farm Calculator
+            </h4>
+            <p style='color:white; font-size:13px'>
+                Calculate water needs, fertilizer
+                requirements and season costs
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
+        <div style='background:#1e3a1e; padding:15px;
+                    border-radius:10px; margin:5px 0;
+                    border-left:4px solid #f57c00'>
+            <h4 style='color:#f57c00; margin:0'>
+                💰 Crop Price Predictor
+            </h4>
+            <p style='color:white; font-size:13px'>
+                Predict crop prices, yield and
+                profit based on drought conditions
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
     st.markdown("---")
-    st.subheader("🗺️ States Covered")
+
+    # Tech Stack
+    st.subheader("🛠️ Technology Stack")
+    col1, col2, col3, col4, col5 = st.columns(5)
+    with col1:
+        st.markdown("""
+        <div style='text-align:center; padding:10px;
+                    background:#1e3a1e; border-radius:8px'>
+            <h3>🌲</h3>
+            <b style='color:#4a9e3f'>Machine Learning</b>
+            <p style='color:white; font-size:12px'>
+                Random Forest<br>Scikit-learn
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col2:
+        st.markdown("""
+        <div style='text-align:center; padding:10px;
+                    background:#1e3a1e; border-radius:8px'>
+            <h3>🧠</h3>
+            <b style='color:#4a9e3f'>Deep Learning</b>
+            <p style='color:white; font-size:12px'>
+                PyTorch Neural Net<br>LSTM Forecasting
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col3:
+        st.markdown("""
+        <div style='text-align:center; padding:10px;
+                    background:#1e3a1e; border-radius:8px'>
+            <h3>💬</h3>
+            <b style='color:#4a9e3f'>NLP & AI</b>
+            <p style='color:white; font-size:12px'>
+                Google Gemini<br>Hindi & Marathi
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col4:
+        st.markdown("""
+        <div style='text-align:center; padding:10px;
+                    background:#1e3a1e; border-radius:8px'>
+            <h3>👁️</h3>
+            <b style='color:#4a9e3f'>Computer Vision</b>
+            <p style='color:white; font-size:12px'>
+                CNN Disease Detection<br>Satellite Analysis
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col5:
+        st.markdown("""
+        <div style='text-align:center; padding:10px;
+                    background:#1e3a1e; border-radius:8px'>
+            <h3>🌐</h3>
+            <b style='color:#4a9e3f'>Web & APIs</b>
+            <p style='color:white; font-size:12px'>
+                Streamlit<br>OpenWeather API
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # How to use
+    st.subheader("📖 How to Use This App")
+    steps = [
+        ("1️⃣", "Drought Predictor",
+         "Enter your city → Fetch live weather → Predict drought level → Download PDF report"),
+        ("2️⃣", "Rainfall Forecast",
+         "Select your state → Generate 6 month rainfall forecast → Plan crops accordingly"),
+        ("3️⃣", "Disease Detection",
+         "Upload leaf photo → CNN detects disease → Get treatment in your language"),
+        ("4️⃣", "Farmer Chatbot",
+         "Select language → Ask any farming question → Get AI powered advice"),
+        ("5️⃣", "Farm Calculator",
+         "Enter crop & farm size → Calculate water, fertilizer & total season cost"),
+        ("6️⃣", "Crop Price",
+         "Select crop & drought level → See expected profit & best crop comparison"),
+    ]
+
+    for emoji, title, desc in steps:
+        col1, col2 = st.columns([1, 8])
+        with col1:
+            st.markdown(f"<h2 style='text-align:center'>{emoji}</h2>",
+                        unsafe_allow_html=True)
+        with col2:
+            st.markdown(f"**{title}** — {desc}")
+
+    st.markdown("---")
+
+    # Rainfall chart
+    st.subheader("🗺️ India Rainfall Overview")
     states_data = {
-        'State': ['Maharashtra','Rajasthan','Kerala','Punjab','Gujarat',
-                  'Karnataka','Tamil Nadu','MP','UP','Bihar',
-                  'West Bengal','Andhra Pradesh','Haryana','Odisha','Jharkhand'],
-        'Avg Rainfall (mm)': [877,265,2005,650,489,785,855,750,810,900,
-                               1485,735,568,1285,1040],
-        'Risk Level': ['Moderate','Severe','Normal','Mild','Moderate',
-                       'Mild','Mild','Moderate','Mild','Mild',
-                       'Normal','Mild','Mild','Normal','Mild']
+        'State': [
+            'Maharashtra', 'Rajasthan', 'Kerala', 'Punjab',
+            'Gujarat', 'Karnataka', 'Tamil Nadu', 'MP',
+            'UP', 'Bihar', 'West Bengal', 'Andhra Pradesh',
+            'Haryana', 'Odisha', 'Jharkhand', 'Assam',
+            'Meghalaya', 'Goa', 'Himachal Pradesh',
+            'Uttarakhand'
+        ],
+        'Avg Rainfall (mm)': [
+            877, 265, 2005, 650, 489, 785, 855, 750,
+            810, 900, 1485, 735, 568, 1285, 1040, 1889,
+            2818, 2932, 1251, 1539
+        ],
+        'Risk Level': [
+            'Moderate', 'Severe', 'Normal', 'Mild',
+            'Moderate', 'Mild', 'Mild', 'Moderate',
+            'Mild', 'Mild', 'Normal', 'Mild',
+            'Mild', 'Normal', 'Mild', 'Normal',
+            'Normal', 'Normal', 'Mild', 'Normal'
+        ]
     }
     df_states = pd.DataFrame(states_data)
-    fig = px.bar(df_states, x='State', y='Avg Rainfall (mm)',
-                 color='Risk Level',
-                 color_discrete_map={
-                     'Normal':'#388e3c','Mild':'#fbc02d',
-                     'Moderate':'#f57c00','Severe':'#d32f2f'
-                 },
-                 title='Average Annual Rainfall by State')
+    fig = px.bar(
+        df_states,
+        x='State',
+        y='Avg Rainfall (mm)',
+        color='Risk Level',
+        color_discrete_map={
+            'Normal':   '#388e3c',
+            'Mild':     '#fbc02d',
+            'Moderate': '#f57c00',
+            'Severe':   '#d32f2f'
+        },
+        title='Average Annual Rainfall by State (mm)'
+    )
     fig.update_layout(xaxis_tickangle=-45)
     st.plotly_chart(fig, use_container_width=True)
 
+    # Footer
+    st.markdown("---")
+    st.markdown("""
+    <div style='text-align:center; padding:20px;
+                background:#1e3a1e; border-radius:12px'>
+        <p style='color:#90ee90; font-size:18px; margin:0'>
+            Built with love for Indian Farmers
+        </p>
+        <p style='color:white; margin:5px 0'>
+            AI + ML + DL + NLP + Computer Vision
+        </p>
+        <p style='color:#aaa; font-size:12px; margin:0'>
+            GitHub: github.com/Aditi-Kamble/drought-predictor
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 # ══════════════════════════════════════════════
 # PAGE 2 - DROUGHT PREDICTOR
 # ══════════════════════════════════════════════
