@@ -16,7 +16,7 @@ from PIL import Image
 load_dotenv()
 
 sys.path.append('src')
-from chatbot import get_response
+from chatbot import get_response, CROP_ADVICE
 
 def get_language_response(user_input, drought_level, language):
     if language == 'हिंदी ':
@@ -452,8 +452,14 @@ elif page == "🔮 Drought Predictor":
         crops_list = CROP_ADVICE.get(
             ml_label.lower(), {}).get('crops', [])
 
+        # Clean city name - remove special characters
+        city_name = st.session_state.get('city_name', 'Your Region')
+        city_name = city_name.encode('ascii', 'ignore').decode('ascii')
+        if not city_name:
+            city_name = 'Your Region'
+
         pdf_bytes = generate_report(
-            city=st.session_state.get('city_name', 'Your Region'),
+            city=city_name,
             weather_data=weather_data_for_report,
             ml_label=ml_label,
             ml_conf=ml_conf,
@@ -482,40 +488,6 @@ elif page == "🔮 Drought Predictor":
             for i, crop in enumerate(crops):
                 cols[i].success(f"✅ {crop}")
             st.info(f"💡 {info['advice'][0]}")
-# WhatsApp Alert
-        st.markdown("---")
-        st.subheader("📱 Send WhatsApp Alert")
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            phone = st.text_input(
-                "📱 WhatsApp Number (10 digits):",
-                placeholder="9876543210"
-            )
-        with col2:
-            st.markdown("<br>", unsafe_allow_html=True)
-            send_wa = st.button("📲 Send Alert")
-
-        if send_wa and phone:
-            if len(phone) == 10 and phone.isdigit():
-                from src.whatsapp_alerts import (
-                    send_whatsapp_alert)
-                crops_for_wa = CROP_ADVICE.get(
-                    ml_label.lower(), {}).get('crops', [])
-                success, msg = send_whatsapp_alert(
-                    phone, ml_label,
-                    st.session_state.get('city_name',
-                                         'Your Region'),
-                    crops_for_wa
-                )
-                if success:
-                    st.success(
-                        "✅ WhatsApp alert sent successfully!")
-                else:
-                    st.error(f"❌ Failed: {msg}")
-                    st.info("💡 Setup Twilio account at "
-                            "twilio.com for WhatsApp alerts")
-            else:
-                st.error("❌ Enter valid 10 digit number!")
 
 # ══════════════════════════════════════════════
 # PAGE 3 - DISEASE DETECTION (CNN)
@@ -1365,7 +1337,7 @@ elif page == "👩‍💻 About":
                     text-align: center; color: white;'>
             <h2 style='color:white'>Aditi Kamble</h2>
             <p style='color:white'>AI/ML Developer</p>
-            <p style='color:white'>Maharashtra, India 🇮🇳</p>
+            <p style='color:white'>Maharashtra, India</p>
         </div>
         """, unsafe_allow_html=True)
         st.markdown("---")
