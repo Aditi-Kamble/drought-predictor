@@ -89,7 +89,7 @@ cv_results = {
     'cv_scores':   cv_scores.tolist(),
     'mean_acc':    round(cv_scores.mean()*100, 2),
     'std_acc':     round(cv_scores.std()*100, 2),
-    'test_acc':    round(acc*100, 2),
+    ''test_acc': round(accuracy_score(y_test, y_pred)*100, 2),
 }
 with open('models/cv_results.json', 'w') as f:
     json.dump(cv_results, f)

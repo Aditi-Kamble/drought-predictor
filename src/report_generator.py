@@ -53,7 +53,8 @@ def generate_report(city, weather_data, ml_label,
     pdf.set_font('Helvetica', 'B', 14)
     pdf.set_fill_color(232, 245, 232)
     pdf.cell(0, 12,
-             f'Drought Analysis Report - {clean_text(city)}'
+             city_clean = clean_text(city)
+             f'Drought Analysis Report - {city_clean}'
              fill=True, ln=True, align='C')
     pdf.ln(5)
 
