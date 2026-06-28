@@ -766,7 +766,7 @@ elif page == "🌿 Disease Detection":
         if uploaded_file:
             image = Image.open(uploaded_file)
             st.image(image, caption="Uploaded Leaf",
-                     use_column_width=True)
+         use_container_width=True)
 
         # Sample images tip
         st.markdown("**💡 Tips for best results:**")
