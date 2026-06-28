@@ -11,7 +11,16 @@ import datetime
 from dotenv import load_dotenv
 from PIL import Image
 
+# Global error handler
+import traceback
 
+def safe_load_model(load_func):
+    try:
+        return load_func()
+    except Exception as e:
+        st.error(f"❌ Model loading error: {str(e)}")
+        return None, None, None
+    
 # Load environment variables
 load_dotenv()
 
@@ -171,8 +180,7 @@ with st.sidebar:
 	"💰 Crop Price",
         "🤖 Farmer Chatbot",
         "📊 Data Insights",
-	"🛰️ Satellite Analysis",
-	"👩‍💻 About"
+		"👩‍💻 About"
     ])
     st.markdown("---")
     st.markdown("**About This Project**")
@@ -528,7 +536,10 @@ elif page == "🔮 Drought Predictor":
         st.session_state.deficit       = 25
 
     if fetch_btn and city_input:
-        from src.weather import (get_weather, get_rainfall_estimate,
+        if len(city_input.strip()) < 2:
+            st.error("❌ Please enter a valid city name!")
+        else:
+            from src.weather import (get_weather, get_rainfall_estimate,
                                   estimate_soil_moisture,
                                   estimate_rainfall_deficit)
         if not API_KEY:
@@ -620,7 +631,20 @@ elif page == "🔮 Drought Predictor":
 
     st.markdown("---")
     if st.button("🔮 Predict Drought Level"):
-        input_data = np.array([[annual_rain, avg_temp,
+        # Validate inputs
+        errors = []
+        if annual_rain < 0:
+            errors.append("Rainfall cannot be negative")
+        if not 15 <= avg_temp <= 45:
+            errors.append("Temperature must be 15-45°C")
+        if not 10 <= avg_humidity <= 100:
+            errors.append("Humidity must be 10-100%")
+
+        if errors:
+            for err in errors:
+                st.error(f"❌ {err}")
+        else:
+            input_data = np.array([[annual_rain, avg_temp,
                                 avg_humidity, soil_moisture, deficit]])
 
         # ML Prediction
@@ -1451,126 +1475,9 @@ elif page == "📊 Data Insights":
     col3.metric("Worst Deficit",
                 f"{state_df['Rainfall_Deficit_percent'].max():.1f}%")
 
-# ══════════════════════════════════════════════
-# PAGE 9 - SATELLITE ANALYSIS
-# ══════════════════════════════════════════════
-elif page == "🛰️ Satellite Analysis":
-    st.title("🛰️ Satellite Drought Zone Analysis")
-    st.markdown("Analyze satellite images to detect drought zones!")
-
-    st.info("🧠 Uses Computer Vision to analyze "
-            "vegetation health from satellite imagery")
-
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("📸 Upload Satellite Image")
-        sat_image = st.file_uploader(
-            "Upload satellite/aerial image",
-            type=['jpg', 'jpeg', 'png'],
-            key='satellite'
-        )
-        st.markdown("""
-        **What to upload:**
-        - Google Earth screenshot
-        - Drone aerial photo
-        - Any top-down farm image
-        - Satellite imagery
-        """)
-
-    with col2:
-        st.subheader("🔍 Analysis Results")
-        if sat_image:
-            image = Image.open(sat_image)
-            img_array = np.array(
-                image.resize((256, 256)))
-
-            with st.spinner("🛰️ Analyzing satellite image..."):
-                import time
-                time.sleep(2)
-
-                # NDVI-like analysis using RGB
-                if len(img_array.shape) == 3:
-                    r = img_array[:,:,0].astype(float)
-                    g = img_array[:,:,1].astype(float)
-                    b = img_array[:,:,2].astype(float)
-
-                    # Vegetation index
-                    veg_index  = g / (r + g + b + 1)
-                    # Dry index
-                    dry_index  = r / (g + b + 1)
-                    # Water index
-                    water_index = b / (r + g + 1)
-
-                    healthy_pct = float(
-                        (veg_index > 0.38).mean() * 100)
-                    dry_pct     = float(
-                        (dry_index > 0.45).mean() * 100)
-                    water_pct   = float(
-                        (water_index > 0.40).mean() * 100)
-                    stressed_pct = max(0, 100 - healthy_pct
-                                       - dry_pct - water_pct)
-                else:
-                    healthy_pct  = 30.0
-                    dry_pct      = 45.0
-                    water_pct    = 5.0
-                    stressed_pct = 20.0
-
-            # Show original image
-            st.image(image, caption="Uploaded Image",
-                     use_column_width=True)
-
-            # Zone analysis
-            st.markdown("### 🗺️ Zone Analysis")
-            col_a, col_b = st.columns(2)
-            col_a.metric("🟢 Healthy Vegetation",
-                         f"{healthy_pct:.1f}%")
-            col_b.metric("🔴 Dry/Drought Zone",
-                         f"{dry_pct:.1f}%")
-            col_a.metric("💧 Water Bodies",
-                         f"{water_pct:.1f}%")
-            col_b.metric("🟡 Stressed Vegetation",
-                         f"{stressed_pct:.1f}%")
-
-            # Pie chart
-            import plotly.express as px
-            fig = px.pie(
-                values=[healthy_pct, dry_pct,
-                        water_pct, stressed_pct],
-                names=['Healthy', 'Dry Zone',
-                       'Water', 'Stressed'],
-                color_discrete_map={
-                    'Healthy':  '#388e3c',
-                    'Dry Zone': '#d32f2f',
-                    'Water':    '#1565c0',
-                    'Stressed': '#f57c00'
-                },
-                title='Land Zone Distribution'
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-            # Overall assessment
-            if dry_pct > 50:
-                st.error("🔴 CRITICAL: More than 50% area "
-                         "is drought affected!")
-            elif dry_pct > 30:
-                st.warning("🟠 WARNING: Significant drought "
-                           "zones detected!")
-            else:
-                st.success("🟢 GOOD: Vegetation looks "
-                           "relatively healthy!")
-
-        else:
-            st.markdown("""
-            <div style='text-align:center; padding:50px;
-                        border: 2px dashed #4a9e3f;
-                        border-radius:12px'>
-                <h3>🛰️ Upload a satellite image</h3>
-                <p>to analyze drought zones</p>
-            </div>
-            """, unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════
-# PAGE 10 - ABOUT
+# PAGE 9 - ABOUT
 # ══════════════════════════════════════════════
 elif page == "👩‍💻 About":
     st.title("👩‍💻 About This Project")

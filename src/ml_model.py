@@ -18,7 +18,16 @@ df = pd.read_csv('data/rainfall_data.csv')
 print(f"\n✅ Data loaded: {df.shape}")
 
 # 2. Fix: Merge 'Severe' into 'Moderate' since very few samples
-df['Drought_Level'] = df['Drought_Level'].replace({'Severe': 'Moderate'})
+# Keep all 4 classes with real data
+# Check if Severe has enough samples
+severe_count = (df['Drought_Level'] == 'Severe').sum()
+print(f"\n📊 Severe drought samples: {severe_count}")
+if severe_count < 5:
+    print("⚠️  Too few Severe samples, merging with Moderate")
+    df['Drought_Level'] = df['Drought_Level'].replace(
+        {'Severe': 'Moderate'})
+else:
+    print("✅ Keeping all 4 drought classes!")
 print(f"\n📋 Drought Distribution after fix:")
 print(df['Drought_Level'].value_counts())
 
@@ -58,6 +67,33 @@ model = RandomForestClassifier(
 )
 model.fit(X_train_scaled, y_train)
 print("✅ Training complete!")
+
+# ── Cross Validation ──────────────────────────
+from sklearn.model_selection import (
+    cross_val_score, StratifiedKFold)
+
+print("\n📊 5-Fold Cross Validation:")
+cv = StratifiedKFold(
+    n_splits=5, shuffle=True, random_state=42)
+cv_scores = cross_val_score(
+    model, X_train_scaled, y_train,
+    cv=cv, scoring='accuracy')
+
+print(f"CV Scores:    {[f'{s:.3f}' for s in cv_scores]}")
+print(f"Mean CV Acc:  {cv_scores.mean()*100:.2f}%")
+print(f"Std CV Acc:   {cv_scores.std()*100:.2f}%")
+
+# Save CV results
+import json
+cv_results = {
+    'cv_scores':   cv_scores.tolist(),
+    'mean_acc':    round(cv_scores.mean()*100, 2),
+    'std_acc':     round(cv_scores.std()*100, 2),
+    'test_acc':    round(acc*100, 2),
+}
+with open('models/cv_results.json', 'w') as f:
+    json.dump(cv_results, f)
+print("✅ CV results saved!")
 
 # 8. Evaluate
 y_pred = model.predict(X_test_scaled)

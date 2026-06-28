@@ -16,7 +16,16 @@ print("="*50)
 
 # 1. Load Data
 df = pd.read_csv('data/rainfall_data.csv')
-df['Drought_Level'] = df['Drought_Level'].replace({'Severe': 'Moderate'})
+# Keep all 4 classes with real data
+# Check if Severe has enough samples
+severe_count = (df['Drought_Level'] == 'Severe').sum()
+print(f"\n📊 Severe drought samples: {severe_count}")
+if severe_count < 5:
+    print("⚠️  Too few Severe samples, merging with Moderate")
+    df['Drought_Level'] = df['Drought_Level'].replace(
+        {'Severe': 'Moderate'})
+else:
+    print("✅ Keeping all 4 drought classes!")
 print(f"\n✅ Data loaded: {df.shape}")
 
 # 2. Features & Target

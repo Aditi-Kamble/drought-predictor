@@ -1,6 +1,27 @@
 from fpdf import FPDF
 import datetime
 
+def clean_text(text):
+    """Remove non-ASCII characters for PDF compatibility"""
+    if not text:
+        return "Unknown"
+    # Replace common special chars
+    replacements = {
+        '\u2014': '-',  # em dash
+        '\u2013': '-',  # en dash
+        '\u2018': "'",  # left single quote
+        '\u2019': "'",  # right single quote
+        '\u201c': '"',  # left double quote
+        '\u201d': '"',  # right double quote
+        '\u2022': '-',  # bullet
+        '\u00b0': ' degrees',  # degree sign
+    }
+    for char, replacement in replacements.items():
+        text = text.replace(char, replacement)
+    # Final cleanup
+    return text.encode(
+        'ascii', 'ignore').decode('ascii').strip()
+
 class DroughtReport(FPDF):
     def header(self):
         self.set_fill_color(45, 90, 39)
@@ -32,7 +53,7 @@ def generate_report(city, weather_data, ml_label,
     pdf.set_font('Helvetica', 'B', 14)
     pdf.set_fill_color(232, 245, 232)
     pdf.cell(0, 12,
-             f'Drought Analysis Report - {city}',
+             f'Drought Analysis Report - {clean_text(city)}'
              fill=True, ln=True, align='C')
     pdf.ln(5)
 

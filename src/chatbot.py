@@ -4,27 +4,51 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Try new Google Genai
+GROQ_AVAILABLE   = False
+GEMINI_AVAILABLE = False
+groq_client      = None
+gemini_client    = None
+
+# Try Groq first — 14400 free requests/day!
 try:
-    from google import genai
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-    if not GEMINI_API_KEY:
+    from groq import Groq
+    GROQ_KEY = os.getenv("GROQ_API_KEY", "")
+    if not GROQ_KEY:
         try:
             import streamlit as st
-            GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+            GROQ_KEY = st.secrets.get(
+                "GROQ_API_KEY", "")
         except:
-            GEMINI_API_KEY = ""
-    if GEMINI_API_KEY:
-        gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-        GEMINI_AVAILABLE = True
-        print("✅ Gemini AI Active!")
-    else:
-        GEMINI_AVAILABLE = False
-        print("⚠️ Gemini API key not found!")
+            GROQ_KEY = ""
+    if GROQ_KEY:
+        groq_client    = Groq(api_key=GROQ_KEY)
+        GROQ_AVAILABLE = True
+        print("✅ Groq AI Active! (14400 req/day)")
 except Exception as e:
-    GEMINI_AVAILABLE = False
-    print(f"⚠️ Gemini not available: {e}")
+    print(f"Groq not available: {e}")
 
+# Fallback to Gemini
+if not GROQ_AVAILABLE:
+    try:
+        from google import genai
+        GEMINI_KEY = os.getenv("GEMINI_API_KEY", "")
+        if not GEMINI_KEY:
+            try:
+                import streamlit as st
+                GEMINI_KEY = st.secrets.get(
+                    "GEMINI_API_KEY", "")
+            except:
+                GEMINI_KEY = ""
+        if GEMINI_KEY:
+            gemini_client    = genai.Client(
+                api_key=GEMINI_KEY)
+            GEMINI_AVAILABLE = True
+            print("✅ Gemini AI Active!")
+    except Exception as e:
+        print(f"Gemini not available: {e}")
+
+if not GROQ_AVAILABLE and not GEMINI_AVAILABLE:
+    print("⚠️  Running in keyword mode")
 # Knowledge Base
 CROP_ADVICE = {
     'normal': {
@@ -93,29 +117,43 @@ WEATHER_TIPS = [
 ]
 
 # Gemini Response
-def get_gemini_response(user_input, drought_level):
-    try:
-        prompt = f"""You are an expert AI farming assistant for Indian farmers.
+def get_ai_response(user_input, drought_level):
+    prompt = f"""You are an expert AI farming
+assistant for Indian farmers.
+Current drought level: {drought_level.upper()}
+Farmer question: {user_input}
+Give helpful practical advice for Indian farming.
+Keep response concise (3-5 sentences), friendly.
+Focus on actionable advice immediately usable.
+End with one encouraging sentence."""
 
-Current drought level in the farmer's area: {drought_level.upper()}
+    # Try Groq first
+    if GROQ_AVAILABLE:
+        try:
+            response = groq_client.chat.completions.create(
+                model="llama3-8b-8192",
+                messages=[{
+                    "role": "user",
+                    "content": prompt
+                }],
+                max_tokens=300
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            print(f"Groq error: {e}")
 
-Farmer's question: {user_input}
+    # Fallback Gemini
+    if GEMINI_AVAILABLE:
+        try:
+            response = gemini_client.models.generate_content(
+                model='gemini-2.0-flash-lite',
+                contents=prompt
+            )
+            return response.text
+        except Exception as e:
+            print(f"Gemini error: {e}")
 
-Please provide helpful, practical advice specific to Indian farming conditions.
-Keep your response concise (3-5 sentences), friendly and easy to understand.
-Focus on actionable advice the farmer can implement immediately.
-If recommending crops, suggest ones suitable for {drought_level} drought 
-conditions in India.
-End with one encouraging sentence for the farmer."""
-
-        response = gemini_client.models.generate_content(
-            model='gemini-2.0-flash-lite',
-            contents=prompt
-        )
-        return response.text
-    except Exception as e:
-        print(f"Gemini error: {e}")
-        return None
+    return None
 
 # Intent Detection
 def detect_intent(text):
@@ -201,35 +239,36 @@ def get_fallback_response(user_input, drought_level):
 
 # Main Response Function
 def get_response(user_input, drought_level='moderate'):
-    # Check if Hindi
-    from src.hindi_support import is_hindi, get_hindi_response
-    if is_hindi(user_input):
-        # Try Gemini for Hindi first
-        if GEMINI_AVAILABLE:
-            hindi_prompt = f"""आप एक भारतीय किसान सहायक हैं।
-सूखे का स्तर: {drought_level}
-किसान का प्रश्न: {user_input}
-कृपया हिंदी में संक्षिप्त और व्यावहारिक सलाह दें।
-3-4 वाक्यों में उत्तर दें।"""
-            try:
-                response = gemini_client.models.generate_content(
-                    model='gemini-2.0-flash-lite',
-                    contents=hindi_prompt
-                )
-                if response.text:
-                    return response.text
-            except:
-                pass
-        return get_hindi_response(
-            user_input, drought_level, CROP_ADVICE)
+    try:
+        from src.hindi_support import (
+            is_hindi, get_hindi_response)
+        if is_hindi(user_input):
+            hindi_prompt = f"""आप भारतीय किसान
+सहायक हैं। सूखे का स्तर: {drought_level}
+प्रश्न: {user_input}
+हिंदी में 3-4 वाक्यों में उत्तर दें।"""
+            if GROQ_AVAILABLE:
+                try:
+                    resp = groq_client.chat.completions.create(
+                        model="llama3-8b-8192",
+                        messages=[{
+                            "role": "user",
+                            "content": hindi_prompt
+                        }],
+                        max_tokens=300
+                    )
+                    return resp.choices[0].message.content
+                except:
+                    pass
+            return get_hindi_response(
+                user_input, drought_level, CROP_ADVICE)
+    except:
+        pass
 
-    # English — Try Gemini first
-    if GEMINI_AVAILABLE:
-        gemini_response = get_gemini_response(
-            user_input, drought_level)
-        if gemini_response:
-            return gemini_response
-
+    ai_resp = get_ai_response(user_input, drought_level)
+    if ai_resp:
+        return ai_resp
+    return get_fallback_response(user_input, drought_level)
     # Fallback
     return get_fallback_response(user_input, drought_level)
 
