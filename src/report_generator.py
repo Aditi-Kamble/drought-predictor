@@ -2,23 +2,20 @@ from fpdf import FPDF
 import datetime
 
 def clean_text(text):
-    """Remove non-ASCII characters for PDF compatibility"""
     if not text:
         return "Unknown"
-    # Replace common special chars
     replacements = {
-        '\u2014': '-',  # em dash
-        '\u2013': '-',  # en dash
-        '\u2018': "'",  # left single quote
-        '\u2019': "'",  # right single quote
-        '\u201c': '"',  # left double quote
-        '\u201d': '"',  # right double quote
-        '\u2022': '-',  # bullet
-        '\u00b0': ' degrees',  # degree sign
+        '\u2014': '-',
+        '\u2013': '-',
+        '\u2018': "'",
+        '\u2019': "'",
+        '\u201c': '"',
+        '\u201d': '"',
+        '\u2022': '-',
+        '\u00b0': ' degrees',
     }
     for char, replacement in replacements.items():
         text = text.replace(char, replacement)
-    # Final cleanup
     return text.encode(
         'ascii', 'ignore').decode('ascii').strip()
 
@@ -28,7 +25,8 @@ class DroughtReport(FPDF):
         self.rect(0, 0, 210, 25, 'F')
         self.set_font('Helvetica', 'B', 16)
         self.set_text_color(255, 255, 255)
-        self.cell(0, 25, 'AI Drought Predictor Report',
+        self.cell(0, 25,
+                  'AI Drought Predictor Report',
                   align='C')
         self.ln(30)
         self.set_text_color(0, 0, 0)
@@ -49,12 +47,13 @@ def generate_report(city, weather_data, ml_label,
     pdf = DroughtReport()
     pdf.add_page()
 
-    # Title Section
+    city_clean = clean_text(str(city))
+
+    # Title
     pdf.set_font('Helvetica', 'B', 14)
     pdf.set_fill_color(232, 245, 232)
     pdf.cell(0, 12,
-             city_clean = clean_text(city)
-             f'Drought Analysis Report - {city_clean}'
+             'Drought Analysis Report - ' + city_clean,
              fill=True, ln=True, align='C')
     pdf.ln(5)
 
@@ -62,7 +61,8 @@ def generate_report(city, weather_data, ml_label,
     pdf.set_font('Helvetica', '', 10)
     pdf.set_text_color(100, 100, 100)
     pdf.cell(0, 8,
-             f'Date: {datetime.datetime.now().strftime("%d %B %Y, %I:%M %p")}',
+             'Date: ' + datetime.datetime.now().strftime(
+                 "%d %B %Y, %I:%M %p"),
              ln=True)
     pdf.ln(5)
     pdf.set_text_color(0, 0, 0)
@@ -71,7 +71,8 @@ def generate_report(city, weather_data, ml_label,
     pdf.set_font('Helvetica', 'B', 12)
     pdf.set_fill_color(74, 158, 63)
     pdf.set_text_color(255, 255, 255)
-    pdf.cell(0, 10, 'Weather Data', fill=True, ln=True)
+    pdf.cell(0, 10, 'Weather Data',
+             fill=True, ln=True)
     pdf.set_text_color(0, 0, 0)
     pdf.set_font('Helvetica', '', 11)
     pdf.ln(3)
@@ -79,17 +80,22 @@ def generate_report(city, weather_data, ml_label,
     if weather_data:
         weather_items = [
             ('Temperature',
-             f"{weather_data.get('temperature', 'N/A')} C"),
+             str(weather_data.get(
+                 'temperature', 'N/A')) + ' C'),
             ('Humidity',
-             f"{weather_data.get('humidity', 'N/A')}%"),
+             str(weather_data.get(
+                 'humidity', 'N/A')) + '%'),
             ('Wind Speed',
-             f"{weather_data.get('wind_speed', 'N/A')} km/h"),
+             str(weather_data.get(
+                 'wind_speed', 'N/A')) + ' km/h'),
             ('Conditions',
-             weather_data.get('description', 'N/A')),
+             clean_text(str(weather_data.get(
+                 'description', 'N/A')))),
         ]
         for label, value in weather_items:
             pdf.cell(80, 8, label + ':', border=0)
-            pdf.cell(0, 8, str(value), ln=True)
+            pdf.cell(0, 8,
+                     clean_text(str(value)), ln=True)
     pdf.ln(5)
 
     # Prediction Results
@@ -104,17 +110,21 @@ def generate_report(city, weather_data, ml_label,
 
     results = [
         ('ML Model (Random Forest)',
-         f"{ml_label} ({ml_conf:.1f}% confidence)"),
+         ml_label + ' (' + str(round(ml_conf, 1))
+         + '% confidence)'),
         ('DL Model (Neural Network)',
-         f"{dl_label} ({dl_conf:.1f}% confidence)"),
-        ('Rainfall Deficit', f"{deficit}%"),
+         dl_label + ' (' + str(round(dl_conf, 1))
+         + '% confidence)'),
+        ('Rainfall Deficit',
+         str(deficit) + '%'),
     ]
     for label, value in results:
         pdf.cell(80, 8, label + ':', border=0)
-        pdf.cell(0, 8, str(value), ln=True)
+        pdf.cell(0, 8,
+                 clean_text(str(value)), ln=True)
     pdf.ln(5)
 
-    # Severity indicator
+    # Severity
     severity_colors = {
         'Normal':   (56,  142, 60),
         'Mild':     (251, 192, 45),
@@ -126,7 +136,7 @@ def generate_report(city, weather_data, ml_label,
     pdf.set_text_color(255, 255, 255)
     pdf.set_font('Helvetica', 'B', 14)
     pdf.cell(0, 14,
-             f'Drought Level: {ml_label}',
+             'Drought Level: ' + ml_label,
              fill=True, ln=True, align='C')
     pdf.set_text_color(0, 0, 0)
     pdf.ln(5)
@@ -142,7 +152,9 @@ def generate_report(city, weather_data, ml_label,
     pdf.ln(3)
 
     for i, crop in enumerate(crops, 1):
-        pdf.cell(0, 8, f'{i}. {crop}', ln=True)
+        pdf.cell(0, 8,
+                 str(i) + '. ' + clean_text(str(crop)),
+                 ln=True)
     pdf.ln(5)
 
     # Action Items
@@ -167,28 +179,28 @@ def generate_report(city, weather_data, ml_label,
             'Create water storage in farm',
         ],
         'Moderate': [
-            'Plant only drought-tolerant crops immediately',
-            'Apply for PM Fasal Bima Yojana insurance',
-            'Implement water harvesting techniques',
-            'Contact local agriculture office for support',
+            'Plant only drought-tolerant crops',
+            'Apply for PM Fasal Bima Yojana',
+            'Implement water harvesting',
+            'Contact local agriculture office',
         ],
         'Severe': [
             'Plant only Bajra and Moth Bean',
             'Apply for drought relief compensation',
             'Implement emergency water conservation',
-            'Contact District Collector for assistance',
+            'Contact District Collector office',
         ],
     }
-
     for action in actions.get(ml_label, []):
-        pdf.cell(0, 8, f'- {action}', ln=True)
+        pdf.cell(0, 8,
+                 '- ' + clean_text(action), ln=True)
     pdf.ln(5)
 
     # Government Schemes
     pdf.set_font('Helvetica', 'B', 12)
     pdf.set_fill_color(74, 158, 63)
     pdf.set_text_color(255, 255, 255)
-    pdf.cell(0, 10, 'Government Schemes to Apply',
+    pdf.cell(0, 10, 'Government Schemes',
              fill=True, ln=True)
     pdf.set_text_color(0, 0, 0)
     pdf.set_font('Helvetica', '', 11)
@@ -196,21 +208,22 @@ def generate_report(city, weather_data, ml_label,
 
     schemes = [
         'PM Fasal Bima Yojana - pmfby.gov.in',
-        'PM Krishi Sinchai Yojana - Agriculture Office',
-        'Kisan Credit Card - Any Nationalized Bank',
+        'PM Krishi Sinchai Yojana - Agri Office',
+        'Kisan Credit Card - Nationalized Bank',
         'MGNREGA - District Collector Office',
     ]
     for scheme in schemes:
-        pdf.cell(0, 8, f'- {scheme}', ln=True)
+        pdf.cell(0, 8,
+                 '- ' + clean_text(scheme), ln=True)
 
     # Footer note
     pdf.ln(10)
     pdf.set_font('Helvetica', 'I', 9)
     pdf.set_text_color(128, 128, 128)
     pdf.multi_cell(0, 6,
-        'This report is generated by AI Drought Predictor. '
-        'Please consult local agriculture experts for '
-        'final decisions. '
+        'This report is generated by AI Drought '
+        'Predictor. Please consult local agriculture '
+        'experts for final decisions. '
         'GitHub: github.com/Aditi-Kamble/drought-predictor')
 
     return pdf.output()
